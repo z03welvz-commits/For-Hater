@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neko Puzzle Land 🐱</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink:#FFB7C5;--pink-deep:#FF8FAB;--pink-light:#FFE4EC;
+    --lavender:#C9B8FF;--lavender-deep:#A98BFF;
+    --mint:#B5EAD7;--mint-deep:#78D6B0;
+    --peach:#FFDDB5;--peach-deep:#FFB86C;
+    --yellow-deep:#FFE066;
+    --text:#4A3728;--text-soft:#7A6060;--shadow:rgba(200,120,120,0.15);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#FFE4EC 0%,#E8D8FF 35%,#D8F0FF 70%,#D8FFE8 100%);background-attachment:fixed;min-height:100vh;color:var(--text);overflow-x:hidden;}
+  body::before{content:'🐾 🐾 🐾 🐾 🐾 🐾 🐾 🐾 🐾 🐾 🐾 🐾 🐾 🐾 🐾 🐾 🐾 🐾 🐾 🐾';position:fixed;top:0;left:0;right:0;bottom:0;font-size:28px;opacity:0.06;word-break:break-all;line-height:2.5;pointer-events:none;z-index:0;}
+  .container{max-width:1100px;margin:0 auto;padding:2rem 1.5rem 4rem;position:relative;z-index:1;}
+  .header{text-align:center;margin-bottom:2.5rem;animation:bounceIn 0.8s ease;}
+  .header-cat{font-size:5rem;animation:float 3s ease-in-out infinite;display:inline-block;filter:drop-shadow(0 8px 16px rgba(255,140,170,0.4));}
+  .header h1{font-family:'Fredoka One',cursive;font-size:3.5rem;color:var(--pink-deep);text-shadow:3px 3px 0 #fff,4px 4px 0 var(--lavender-deep);letter-spacing:2px;margin:0.3rem 0 0.5rem;}
+  .header p{font-size:1.15rem;color:var(--text-soft);font-weight:600;}
+  .scorebar{display:flex;justify-content:center;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap;}
+  .score-badge{background:white;border-radius:50px;padding:0.5rem 1.5rem;font-weight:800;font-size:1rem;box-shadow:0 4px 12px var(--shadow);border:2.5px solid var(--pink-light);display:flex;align-items:center;gap:0.5rem;}
+  .games-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;}
+  .game-card{background:white;border-radius:28px;padding:1.75rem;box-shadow:0 8px 30px var(--shadow);border:3px solid transparent;transition:transform 0.2s,box-shadow 0.2s;position:relative;overflow:hidden;min-height:400px;display:flex;flex-direction:column;}
+  .game-card:hover{transform:translateY(-4px);box-shadow:0 14px 40px rgba(200,120,120,0.22);}
+  .game-card.pink{border-color:var(--pink);background:linear-gradient(160deg,#fff 60%,#FFF0F5);}
+  .game-card.lavender{border-color:var(--lavender);background:linear-gradient(160deg,#fff 60%,#F3EEFF);}
+  .game-card.mint{border-color:var(--mint);background:linear-gradient(160deg,#fff 60%,#EFFFFA);}
+  .game-card.peach{border-color:var(--peach-deep);background:linear-gradient(160deg,#fff 60%,#FFF5E8);}
+  .game-header{display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;}
+  .game-icon{font-size:2.2rem;}
+  .game-title{font-family:'Fredoka One',cursive;font-size:1.4rem;color:var(--text);line-height:1.2;}
+  .game-subtitle{font-size:0.8rem;color:var(--text-soft);font-weight:600;}
+  .game-area{flex:1;display:flex;flex-direction:column;justify-content:center;}
+  .btn{padding:0.65rem 1.4rem;border:none;border-radius:50px;font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;cursor:pointer;transition:all 0.2s;outline:none;}
+  .btn:active{transform:scale(0.95);}
+  .btn-pink{background:var(--pink-deep);color:white;box-shadow:0 4px 12px rgba(255,143,171,0.4);}
+  .btn-pink:hover{background:#FF6B99;}
+  .btn-lavender{background:var(--lavender-deep);color:white;box-shadow:0 4px 12px rgba(169,139,255,0.4);}
+  .btn-sm{padding:0.4rem 1rem;font-size:0.85rem;}
+
+  /* Game 1 */
+  #game1 .scrambled{display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;margin:0.75rem 0;}
+  .letter-tile{width:44px;height:44px;background:var(--pink-light);border:2.5px solid var(--pink-deep);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;cursor:pointer;user-select:none;transition:all 0.15s;color:var(--pink-deep);}
+  .letter-tile:hover{background:var(--pink-deep);color:white;transform:translateY(-3px);}
+  .letter-tile.used{opacity:0.3;pointer-events:none;}
+  .answer-row{display:flex;gap:0.5rem;justify-content:center;min-height:54px;margin:0.5rem 0;flex-wrap:wrap;}
+  .answer-slot{width:44px;height:44px;border-bottom:3px solid var(--pink-deep);display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;color:var(--text);cursor:pointer;transition:all 0.15s;}
+  .answer-slot.filled{background:var(--pink-light);border-radius:10px;border:2.5px solid var(--pink-deep);}
+  .hint-text{text-align:center;font-size:1.5rem;margin-bottom:0.4rem;}
+  .word-clue{text-align:center;font-weight:700;font-size:0.9rem;color:var(--text-soft);margin-bottom:0.5rem;}
+  .g1-controls{display:flex;gap:0.6rem;justify-content:center;margin-top:0.75rem;}
+  .timeline{display:flex;align-items:center;margin-bottom:0.75rem;overflow:hidden;}
+  .timeline-step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}
+  .timeline-step::before{content:'';position:absolute;top:12px;left:50%;right:-50%;height:3px;background:#E8D8D8;z-index:0;}
+  .timeline-step:last-child::before{display:none;}
+  .tl-dot{width:26px;height:26px;border-radius:50%;background:#E8D8D8;border:3px solid white;z-index:1;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:white;transition:all 0.3s;}
+  .tl-dot.done{background:var(--pink-deep);}
+  .tl-dot.current{background:var(--yellow-deep);box-shadow:0 0 0 4px rgba(255,224,102,0.3);color:var(--text);}
+  .tl-label{font-size:0.62rem;font-weight:700;color:var(--text-soft);margin-top:2px;}
+
+  /* Game 2 */
+  .emoji-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;}
+  .emoji-card{aspect-ratio:1;background:var(--lavender);border:2.5px solid var(--lavender-deep);border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;transition:all 0.3s;}
+  .emoji-card.hidden .emoji-inner{opacity:0;transform:scale(0);}
+  .emoji-inner{transition:all 0.3s;font-size:1.5rem;}
+  .emoji-card:hover:not(.matched):not(.flipped){transform:scale(1.08);}
+  .emoji-card.flipped{background:white;}
+  .emoji-card.matched{background:var(--mint);border-color:var(--mint-deep);animation:matchPop 0.4s ease;}
+  .emoji-card.flipped .emoji-inner{opacity:1;transform:scale(1);}
+  @keyframes matchPop{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+
+  /* Game 3 */
+  .color-word{font-family:'Fredoka One',cursive;font-size:2.2rem;font-weight:900;letter-spacing:2px;transition:color 0.3s;text-align:center;}
+  .color-instruction{font-size:0.85rem;font-weight:700;color:var(--text-soft);margin-bottom:0.8rem;text-align:center;}
+  .color-buttons{display:grid;grid-template-columns:repeat(2,1fr);gap:0.6rem;}
+  .color-btn{padding:0.75rem;border-radius:14px;font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;cursor:pointer;transition:all 0.2s;border:3px solid transparent;}
+  .color-btn:hover{transform:translateY(-2px);filter:brightness(1.1);}
+  .color-btn:active{transform:scale(0.95);}
+  .g3-score{text-align:center;font-weight:700;font-size:0.9rem;color:var(--text-soft);margin-top:0.6rem;}
+  .streak-bar{display:flex;gap:4px;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;}
+  .streak-star{font-size:1rem;opacity:0.3;transition:opacity 0.3s,transform 0.3s;}
+  .streak-star.lit{opacity:1;transform:scale(1.2);}
+
+  /* Game 4 */
+  .quiz-question{text-align:center;font-size:2.5rem;margin-bottom:0.3rem;}
+  .quiz-q-text{text-align:center;font-weight:700;font-size:0.95rem;color:var(--text-soft);margin-bottom:0.9rem;min-height:2.5em;}
+  .quiz-options{display:grid;grid-template-columns:repeat(2,1fr);gap:0.6rem;}
+  .quiz-opt{padding:0.7rem 0.5rem;border-radius:14px;background:var(--peach);border:2.5px solid var(--peach-deep);font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:all 0.2s;color:var(--text);}
+  .quiz-opt:hover{background:var(--peach-deep);color:white;transform:translateY(-2px);}
+  .quiz-opt.correct{background:var(--mint);border-color:var(--mint-deep);color:#1A6644;}
+  .quiz-opt.wrong{background:#FFD0D0;border-color:#FF8888;color:#8B2222;}
+  .quiz-opt:disabled{pointer-events:none;}
+  .quiz-progress{text-align:center;font-size:0.8rem;font-weight:700;color:var(--text-soft);margin-top:0.6rem;}
+
+  /* ============ MEMORY POPUP ============ */
+  .memory-overlay{position:fixed;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.35s;}
+  .memory-overlay.active{opacity:1;pointer-events:all;}
+  .memory-backdrop{position:absolute;inset:0;background:rgba(70,30,50,0.6);backdrop-filter:blur(7px);}
+  .memory-card{position:relative;background:white;border-radius:32px;width:min(92vw,460px);box-shadow:0 30px 80px rgba(200,80,120,0.4);border:4px solid var(--pink-light);overflow:hidden;animation:memPop 0.45s cubic-bezier(0.34,1.56,0.64,1);cursor:pointer;}
+  @keyframes memPop{0%{transform:scale(0.35) translateY(60px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}
+  .mem-photo-wrap{position:relative;width:100%;padding-top:58%;background:#f5e8f0;overflow:hidden;}
+  .mem-photo-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 7s ease;}
+  .memory-overlay.active .mem-photo-wrap img{transform:scale(1.07);}
+  .mem-ribbon{position:absolute;top:16px;right:-32px;background:var(--pink-deep);color:white;font-family:'Fredoka One',cursive;font-size:0.85rem;padding:6px 48px;transform:rotate(35deg);letter-spacing:1px;box-shadow:0 3px 12px rgba(0,0,0,0.25);z-index:2;}
+  .mem-gradient{position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to top,rgba(255,240,248,0.9),transparent);}
+  .mem-body{padding:1rem 1.4rem 1.3rem;background:white;position:relative;}
+  .mem-float-emoji{position:absolute;top:-30px;left:50%;transform:translateX(-50%);font-size:3rem;filter:drop-shadow(0 4px 10px rgba(255,120,170,0.5));animation:bobble 0.55s ease infinite alternate;}
+  @keyframes bobble{0%{transform:translateX(-50%) rotate(-7deg) scale(1)}100%{transform:translateX(-50%) rotate(7deg) scale(1.13)}}
+  .mem-tag{display:inline-block;background:var(--pink-light);color:var(--pink-deep);font-size:0.7rem;font-weight:800;border-radius:50px;padding:3px 12px;margin-bottom:0.45rem;text-transform:uppercase;letter-spacing:0.5px;}
+  .mem-phrase{font-family:'Fredoka One',cursive;font-size:1.65rem;color:var(--text);line-height:1.2;margin-bottom:0.3rem;}
+  .mem-desc{font-size:0.88rem;font-weight:600;color:var(--text-soft);line-height:1.6;margin-bottom:0.75rem;}
+  .mem-footer{display:flex;align-items:center;justify-content:space-between;border-top:1.5px dashed #FFD8E8;padding-top:0.65rem;}
+  .mem-stars{font-size:1.1rem;letter-spacing:2px;}
+  .mem-tap{font-size:0.75rem;font-weight:700;color:var(--text-soft);opacity:0.65;}
+
+  /* Particles */
+  .particle{position:fixed;pointer-events:none;font-size:1.8rem;animation:particleFly 1.3s ease-out forwards;z-index:1000;}
+  @keyframes particleFly{0%{transform:translateY(0) rotate(0deg) scale(1);opacity:1}100%{transform:translateY(-340px) rotate(720deg) scale(0.1);opacity:0}}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  @keyframes bounceIn{0%{transform:scale(0.7);opacity:0}80%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+  @keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+  @keyframes floatUp{0%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(-50%,-500px) scale(1.2);opacity:0}}
+
+  @media(max-width:700px){.games-grid{grid-template-columns:1fr}.header h1{font-size:2.5rem}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="header-cat">🐱</div>
+    <h1>Neko Puzzle Land</h1>
+    <p>Purr-fect mini games for clever kitties! 🐾</p>
+  </div>
+  <div class="scorebar">
+    <div class="score-badge">⭐ Total Stars: <span id="totalStars">0</span></div>
+    <div class="score-badge">🏆 Games Won: <span id="totalWins">0</span></div>
+  </div>
+
+  <div class="games-grid">
+    <!-- GAME 1 -->
+    <div class="game-card pink" id="game1">
+      <div class="game-header"><span class="game-icon">🔤</span><div><div class="game-title">Paw-fect Letters</div><div class="game-subtitle">Arrange letters to spell the word!</div></div></div>
+      <div class="timeline" id="g1-timeline"></div>
+      <div class="game-area">
+        <div class="hint-text" id="g1-hint"></div>
+        <div class="word-clue" id="g1-clue"></div>
+        <div class="answer-row" id="g1-answer"></div>
+        <div class="scrambled" id="g1-tiles"></div>
+        <div class="g1-controls">
+          <button class="btn btn-pink btn-sm" onclick="g1Clear()">🔄 Clear</button>
+          <button class="btn btn-pink btn-sm" onclick="g1Check()">✓ Check!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME 2 -->
+    <div class="game-card lavender" id="game2">
+      <div class="game-header"><span class="game-icon">✨</span><div><div class="game-title">Emoji Purrfect Pairs</div><div class="game-subtitle">Find all matching emojis!</div></div></div>
+      <div class="game-area">
+        <div class="emoji-grid" id="g2-grid"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.75rem;">
+          <div style="font-size:0.85rem;font-weight:700;color:var(--text-soft);">Pairs: <span id="g2-found">0</span>/8</div>
+          <div style="font-size:0.85rem;font-weight:700;color:var(--text-soft);">Moves: <span id="g2-moves">0</span></div>
+          <button class="btn btn-lavender btn-sm" onclick="g2Init()">🔀 New</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME 3 -->
+    <div class="game-card mint" id="game3">
+      <div class="game-header"><span class="game-icon">🎨</span><div><div class="game-title">Meow Colors!</div><div class="game-subtitle">Tap the COLOR of the word, not what it says!</div></div></div>
+      <div class="game-area">
+        <div style="margin:0.5rem 0;"><div class="color-instruction">What COLOR is this word written in?</div><div class="color-word" id="g3-word">PINK</div></div>
+        <div class="color-buttons" id="g3-buttons"></div>
+        <div class="g3-score">Score: <span id="g3-score">0</span> &nbsp;|&nbsp; Best: <span id="g3-best">0</span></div>
+        <div class="streak-bar" id="g3-streak"></div>
+      </div>
+    </div>
+
+    <!-- GAME 4 -->
+    <div class="game-card peach" id="game4">
+      <div class="game-header"><span class="game-icon">🐾</span><div><div class="game-title">Cat-chy Trivia!</div><div class="game-subtitle">How well do you know cats?</div></div></div>
+      <div class="game-area">
+        <div class="quiz-question" id="g4-emoji"></div>
+        <div class="quiz-q-text" id="g4-question"></div>
+        <div class="quiz-options" id="g4-options"></div>
+        <div class="quiz-progress" id="g4-progress"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MEMORY POPUP -->
+<div class="memory-overlay" id="memOverlay" onclick="closeMemory()">
+  <div class="memory-backdrop"></div>
+  <div class="memory-card" onclick="event.stopPropagation();closeMemory()">
+    <div class="mem-photo-wrap">
+      <img id="mem-photo" src="" alt="">
+      <div class="mem-ribbon" id="mem-ribbon">✨ Correct!</div>
+      <div class="mem-gradient"></div>
+    </div>
+    <div class="mem-body">
+      <div class="mem-float-emoji" id="mem-emoji">🎉</div>
+      <div style="padding-top:1.8rem;">
+        <div class="mem-tag" id="mem-tag">Great job!</div>
+        <div class="mem-phrase" id="mem-phrase">Amazing!</div>
+        <div class="mem-desc" id="mem-desc">You did something wonderful today.</div>
+        <div class="mem-footer">
+          <div class="mem-stars" id="mem-stars">⭐⭐⭐</div>
+          <div class="mem-tap">Tap to continue 🐾</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// MEMORY DATA
+// ============================================================
+const MEM = {
+  g1: [
+    {photo:'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=700&q=80',ribbon:'🐱 CAT',emoji:'😸',phrase:'You spelled CAT!',desc:'Cats have been our companions for over 10,000 years. Ancient Egyptians worshipped them — and honestly, they still act like it.',tag:'Paw-fect Letters · Level 1',stars:'⭐⭐⭐'},
+    {photo:'https://images.unsplash.com/photo-1508193638397-1c4234db14d8?w=700&q=80',ribbon:'🐾 PAWS',emoji:'🐾',phrase:'Lovely PAWS!',desc:'A cat\'s paw pads are incredibly sensitive — they feel vibrations, heat, and texture through those adorable little toe beans.',tag:'Paw-fect Letters · Level 2',stars:'⭐⭐⭐'},
+    {photo:'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?w=700&q=80',ribbon:'😻 PURR',emoji:'😻',phrase:'You heard the PURR!',desc:'A cat\'s purr vibrates at 25–50 Hz — the same frequency used in physical therapy. Cats are literally healing machines.',tag:'Paw-fect Letters · Level 3',stars:'⭐⭐⭐'},
+    {photo:'https://images.unsplash.com/photo-1533738363-b7f9aef128ce?w=700&q=80',ribbon:'🔊 MEOW',emoji:'📣',phrase:'MEOW! Nailed it!',desc:'Cats almost never meow at other cats — they invented meowing specifically to talk to humans. You are their chosen one.',tag:'Paw-fect Letters · Level 4',stars:'⭐⭐⭐'},
+    {photo:'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=700&q=80',ribbon:'🥛 MILK',emoji:'🥛',phrase:'Cool as MILK!',desc:'Most adult cats are actually lactose intolerant! A tiny drop is fine, but cats really prefer fresh, clean water to stay healthy.',tag:'Paw-fect Letters · Level 5',stars:'⭐⭐⭐'},
+    {photo:'https://images.unsplash.com/photo-1545888699-8dc2c2ecef98?w=700&q=80',ribbon:'🧶 YARN',emoji:'🧶',phrase:'Unraveled YARN!',desc:'The rolling ball triggers a cat\'s primal hunt instinct — mimicking the movement of prey. They\'re not playing; they\'re training warriors.',tag:'Paw-fect Letters · Level 6',stars:'⭐⭐⭐'},
+    {photo:'https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?w=700&q=80',ribbon:'🇯🇵 NEKO',emoji:'🗾',phrase:'ねこ — Neko! 猫',desc:'"Neko" (猫) means cat in Japanese. Tashirojima is a real Japanese island where cats outnumber humans and rule as island royalty.',tag:'Paw-fect Letters · Level 7',stars:'⭐⭐⭐'},
+    {photo:'https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=700&q=80',ribbon:'🐟 FISH',emoji:'🐟',phrase:'Caught the FISH!',desc:'Cats are obligate carnivores — they need meat to survive. Fish provides taurine and omega-3s their bodies crave. Dinner is served!',tag:'Paw-fect Letters · Level 8',stars:'⭐⭐⭐'},
+  ],
+  g2: {
+    '🐱':{photo:'https://images.unsplash.com/photo-1478098711619-5ab0b478d6e6?w=700&q=80',emoji:'🐱',phrase:'Twin Kitties!',desc:'Two cats who look alike often share similar bold, curious personalities — double the mischief, double the love.'},
+    '🌸':{photo:'https://images.unsplash.com/photo-1522748906645-95d8adfd52c7?w=700&q=80',emoji:'🌸',phrase:'Cherry Blossoms!',desc:'In Japan, sakura season is celebrated under blooming trees — a moment as fleeting and precious as a perfect memory.'},
+    '⭐':{photo:'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=700&q=80',emoji:'⭐',phrase:'Stargazing Night!',desc:'On a clear night you can see 5,000 stars with the naked eye. Each one is a sun with its own worlds — vast and beautiful.'},
+    '🎀':{photo:'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=700&q=80',emoji:'🎀',phrase:'Gifted!',desc:'The best gifts say "I was thinking about you." Tied with a ribbon, they hold more love than words ever could.'},
+    '🍓':{photo:'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=700&q=80',emoji:'🍓',phrase:'Berry Sweet!',desc:'Strawberries technically aren\'t berries — but bananas are! Whatever they\'re called, they taste like sunshine and summer afternoons.'},
+    '🦋':{photo:'https://images.unsplash.com/photo-1444927714506-8492d94b4e3d?w=700&q=80',emoji:'🦋',phrase:'Flutter & Float!',desc:'A butterfly\'s wings contain thousands of tiny scales that reflect light. They taste with their feet and drift on tiny wishes.'},
+    '🌈':{photo:'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=700&q=80',emoji:'🌈',phrase:'Rainbow Magic!',desc:'Rainbows form when sunlight refracts through water droplets. You can never reach the end — but the journey is gorgeous.'},
+    '🍰':{photo:'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=700&q=80',emoji:'🍰',phrase:'Cake Day!',desc:'Every celebration deserves a slice of something sweet. Life is short — eat the cake and share it with someone you love.'},
+    '💕':{photo:'https://images.unsplash.com/photo-1518568814500-bf0f8d125f46?w=700&q=80',emoji:'💕',phrase:'So Much Love!',desc:'Love is like a muscle — the more you use it, the stronger it grows. Spread it freely; it never, ever runs out.'},
+    '🎵':{photo:'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=700&q=80',emoji:'🎵',phrase:'Music is Magic!',desc:'Music triggers the same brain reward centers as food and love. No wonder a good song can instantly change your whole day.'},
+    '🌺':{photo:'https://images.unsplash.com/photo-1490750967868-88df5691cc2c?w=700&q=80',emoji:'🌺',phrase:'Blooming Beauty!',desc:'Hibiscus blooms for just one single day — but in that day, it is the most vivid, breathtaking thing in the entire garden.'},
+    '🍩':{photo:'https://images.unsplash.com/photo-1551106652-a5bcf4b29ab6?w=700&q=80',emoji:'🍩',phrase:'Donut Worry!',desc:'Life is sweeter when you stop worrying. Grab a donut, breathe deep, and remember: you\'ve totally got this, every single day.'},
+  },
+  g3: [
+    {photo:'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=700&q=80',emoji:'🌅',phrase:'Color of Sunrise!',desc:'The sky at dawn paints itself in pinks, oranges, and purples — a daily reminder that every new day is a living masterpiece.'},
+    {photo:'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=700&q=80',emoji:'🌿',phrase:'Shades of Green!',desc:'There are over 100 shades of green in a single forest. Nature is the ultimate color artist and she never repeats herself.'},
+    {photo:'https://images.unsplash.com/photo-1505322033406-a117a7ff6f8b?w=700&q=80',emoji:'🎨',phrase:'Color Genius!',desc:'Colors affect our mood — blue calms, red energizes, yellow uplifts. You\'re now completely fluent in the language of color!'},
+    {photo:'https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=700&q=80',emoji:'💜',phrase:'Purple Dreams!',desc:'Purple was once the rarest, most expensive color — reserved only for royalty. Congratulations, your royal highness.'},
+    {photo:'https://images.unsplash.com/photo-1516912481808-3406841bd33c?w=700&q=80',emoji:'❄️',phrase:'Arctic Blues!',desc:'Deep glacier blue forms as centuries of ice compress and absorb red wavelengths — ancient frozen light, just for your eyes.'},
+  ],
+  g4: [
+    {photo:'data:image/svg+xml;utf8,<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%23FFE4EC;stop-opacity:1" /><stop offset="100%" style="stop-color:%23E8D8FF;stop-opacity:1" /></linearGradient></defs><rect width="400" height="300" fill="url(%23sky)"/><circle cx="100" cy="80" r="30" fill="%23FFB7C5"/><circle cx="300" cy="120" r="35" fill="%23C9B8FF"/><path d="M 100 110 Q 200 200 300 155" stroke="%23FF8FAB" stroke-width="3" fill="none" stroke-dasharray="5,5"/><text x="200" y="250" font-size="40" text-anchor="middle">💕 🌍 💕</text></svg>',emoji:'💕',phrase:'Trust & Communication!',desc:'Trust is the foundation of every strong long distance relationship. When you believe in each other, distance becomes just a number.',customDesc:'',surprise:true},
+    {photo:'data:image/svg+xml;utf8,<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="300" fill="%23FFE4EC"/><circle cx="80" cy="100" r="35" fill="%23FF8FAB" stroke="%23FFB7C5" stroke-width="3"/><circle cx="320" cy="120" r="35" fill="%23A98BFF" stroke="%23C9B8FF" stroke-width="3"/><path d="M 120 100 L 280 120" stroke="%23FFD0E8" stroke-width="2" stroke-dasharray="3,3"/><line x1="115" y1="75" x2="125" y2="65" stroke="%23FFB7C5" stroke-width="2"/><line x1="125" y1="65" x2="135" y2="75" stroke="%23FFB7C5" stroke-width="2"/><line x1="275" y1="95" x2="285" y2="85" stroke="%23C9B8FF" stroke-width="2"/><line x1="285" y1="85" x2="295" y2="95" stroke="%23C9B8FF" stroke-width="2"/><text x="200" y="260" font-size="50" text-anchor="middle">📞</text></svg>',emoji:'📞',phrase:'Talking Every Day!',desc:'Regular communication keeps your bond alive. It doesn\'t matter if it\'s text, video, or voice — what matters is showing up for each other.',customDesc:'',surprise:true},
+    {photo:'data:image/svg+xml;utf8,<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="300" fill="%23E8F5F0"/><polygon points="200,50 250,150 150,150" fill="%23FF8FAB"/><polygon points="100,200 130,250 70,250" fill="%23C9B8FF"/><polygon points="300,210 340,260 260,260" fill="%23FFB7C5"/><polygon points="80,120 100,160 60,160" fill="%23A98BFF"/><circle cx="200" cy="190" r="25" fill="%23FFE4EC" stroke="%23FF8FAB" stroke-width="2"/><text x="200" y="195" font-size="20" text-anchor="middle" fill="%23FF8FAB">🎯</text></svg>',emoji:'🎯',phrase:'Goals & Commitment!',desc:'The strongest couples have a shared future in mind. When you both know where you\'re headed, distance becomes temporary, not permanent.',customDesc:'',surprise:true},
+    {photo:'data:image/svg+xml;utf8,<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23FF8FAB;stop-opacity:1" /><stop offset="100%" style="stop-color:%23C9B8FF;stop-opacity:1" /></linearGradient></defs><rect width="400" height="300" fill="%23FFF5F9"/><path d="M 200 80 Q 180 120 200 160 Q 220 120 200 80" fill="url(%23g1)"/><path d="M 150 150 Q 130 190 150 230 Q 170 190 150 150" fill="url(%23g1)"/><path d="M 250 150 Q 230 190 250 230 Q 270 190 250 150" fill="url(%23g1)"/><circle cx="200" cy="200" r="15" fill="%23FF8FAB"/><text x="200" y="270" font-size="45" text-anchor="middle">💞</text></svg>',emoji:'💞',phrase:'You\'ve Got This!',desc:'The best relationships aren\'t the ones with no distance — they\'re the ones where both people are willing to fight for it.',customDesc:'',surprise:true},
+    {photo:'data:image/svg+xml;utf8,<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="300" fill="%23E8D8FF"/><circle cx="100" cy="100" r="40" fill="%23FFB7C5" opacity="0.8"/><circle cx="300" cy="100" r="40" fill="%23B5EAD7" opacity="0.8"/><circle cx="200" cy="200" r="45" fill="%23FFC9D6" opacity="0.6"/><text x="100" y="105" font-size="30" text-anchor="middle" fill="white">🌍</text><text x="300" y="105" font-size="30" text-anchor="middle" fill="white">🌍</text><path d="M 140 100 Q 200 150 260 100" stroke="%23FF8FAB" stroke-width="2" fill="none" stroke-dasharray="4,4"/><text x="200" y="270" font-size="40" text-anchor="middle">💕</text></svg>',emoji:'🌍',phrase:'Worlds Apart, Hearts Together!',desc:'Distance doesn\'t measure love — it only tests how strong it is. You two are crushing it, no matter how many miles apart.',customDesc:'',surprise:true},
+    {photo:'data:image/svg+xml;utf8,<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="300" fill="%23FFF0F5"/><path d="M 100 80 L 150 120 L 130 180 L 100 150 L 70 180 L 50 120 Z" fill="%23FF8FAB"/><path d="M 300 80 L 350 120 L 330 180 L 300 150 L 270 180 L 250 120 Z" fill="%23C9B8FF"/><circle cx="200" cy="120" r="30" fill="%23FFE4EC" stroke="%23FF8FAB" stroke-width="3"/><text x="200" y="130" font-size="20" text-anchor="middle" fill="%23FF8FAB">💌</text><path d="M 100 150 Q 200 200 300 150" stroke="%23FFD0E8" stroke-width="3" fill="none" stroke-linecap="round"/></svg>',emoji:'💌',phrase:'Love in Every Message!',desc:'Every text, call, and small gesture says "I\'m thinking of you." That\'s the real magic of long distance — intentional, precious moments.',customDesc:'',surprise:true},
+    {photo:'data:image/svg+xml;utf8,<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="300" fill="%23F3EEFF"/><circle cx="200" cy="100" r="50" fill="%23FFD700" stroke="%23FFA500" stroke-width="3"/><path d="M 200 50 L 210 80 L 240 85 L 215 105 L 225 135 L 200 115 L 175 135 L 185 105 L 160 85 L 190 80 Z" fill="%23FFA500"/><text x="200" y="200" font-size="35" text-anchor="middle">👑</text><text x="200" y="260" font-size="24" text-anchor="middle" fill="%23C9B8FF">You\'re Worth It!</text></svg>',emoji:'👑',phrase:'You\'re Worth It!',desc:'The fact that you\'re both here, playing together, shows you\'re worth the effort. Long distance can\'t break what\'s real.',customDesc:'',surprise:true},
+    {photo:'data:image/svg+xml;utf8,<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bow" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23FF8FAB;stop-opacity:1" /><stop offset="100%" style="stop-color:%23FFB7C5;stop-opacity:1" /></linearGradient></defs><rect width="400" height="300" fill="%23FFF5F9"/><path d="M 150 80 Q 150 120 200 140 Q 250 120 250 80" fill="url(%23bow)" stroke="%23FF8FAB" stroke-width="2"/><circle cx="200" cy="145" r="8" fill="%23FF8FAB"/><rect x="180" y="160" width="40" height="100" fill="%23FFE4EC" stroke="%23FF8FAB" stroke-width="2" rx="5"/><path d="M 175 160 L 200 150 L 225 160" fill="%23FF8FAB"/><text x="200" y="270" font-size="45" text-anchor="middle">🎀</text></svg>',emoji:'🎀',phrase:'Forever Yours!',desc:'Real love doesn\'t ask "when will you be here?" — it says "I\'ll wait, I\'ll fight, I\'ll love you no matter what." That\'s beautiful.',customDesc:'',surprise:true},
+  ]
+};
+
+// ============================================================
+// GLOBAL
+// ============================================================
+let totalStars=0,totalWins=0,memCb=null;
+function updateScore(){totalStars+=3;totalWins++;document.getElementById('totalStars').textContent=totalStars;document.getElementById('totalWins').textContent=totalWins;}
+
+function showMemory(data,cb){
+  memCb=cb||null;
+  document.getElementById('mem-photo').src=data.photo||'';
+  document.getElementById('mem-emoji').textContent=data.emoji||'🎉';
+  document.getElementById('mem-ribbon').textContent=data.ribbon||'✨ Correct!';
+  document.getElementById('mem-tag').textContent=data.tag||'Nice!';
+  document.getElementById('mem-phrase').textContent=data.phrase||'Amazing!';
+  // Use custom description if available, otherwise use default
+  document.getElementById('mem-desc').textContent=data.customDesc||data.desc||'';
+  document.getElementById('mem-stars').textContent=data.stars||'⭐⭐⭐';
+  document.getElementById('memOverlay').classList.add('active');
+  spawnParticles();
+  if(data.surprise){spawnConfetti();spawnSurpriseMessage();}
+  updateScore();
+}
+function closeMemory(){
+  document.getElementById('memOverlay').classList.remove('active');
+  if(memCb){const f=memCb;memCb=null;f();}
+}
+function spawnParticles(){
+  const E=['🌸','⭐','💖','🎀','✨','🍓','🌈','🐾','🦋','🍰','💕','🌟','🎵','🌺'];
+  for(let i=0;i<22;i++){
+    setTimeout(()=>{
+      const p=document.createElement('div');p.className='particle';
+      p.textContent=E[Math.floor(Math.random()*E.length)];
+      p.style.left=Math.random()*100+'vw';p.style.top=(30+Math.random()*55)+'vh';
+      p.style.animationDuration=(0.8+Math.random()*0.9)+'s';
+      document.body.appendChild(p);setTimeout(()=>p.remove(),1800);
+    },i*55);
+  }
+}
+function spawnConfetti(){
+  const colors=['#FF8FAB','#C9B8FF','#B5EAD7','#FFDDB5','#FFE066'];
+  for(let i=0;i<40;i++){
+    setTimeout(()=>{
+      const c=document.createElement('div');
+      c.style.cssText=`position:fixed;left:${Math.random()*100}vw;top:-10px;width:8px;height:8px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:50%;pointer-events:none;animation:confettiFall ${1+Math.random()*2}s linear forwards;z-index:1001;`;
+      document.body.appendChild(c);
+      setTimeout(()=>c.remove(),2500);
+    },i*30);
+  }
+}
+function spawnSurpriseMessage(){
+  const msgs=['You\'re amazing! 💕','Keep going! 🌟','I\'m so proud of you! 💞','You\'ve got this! 🔥','I love you! 💕'];
+  const m=msgs[Math.floor(Math.random()*msgs.length)];
+  const el=document.createElement('div');
+  el.style.cssText=`position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.5rem;font-weight:800;color:#FF8FAB;pointer-events:none;animation:floatUp 2s ease-out forwards;z-index:1002;text-shadow:2px 2px 4px rgba(0,0,0,0.1);`;
+  el.textContent=m;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),2500);
+}
+
+// ============================================================
+// GAME 1: Paw-fect Letters
+// ============================================================
+const G1W=[
+  {word:'CAT',hint:'🐱',clue:'A furry meowing friend'},
+  {word:'PAWS',hint:'🐾',clue:'What cats walk on'},
+  {word:'PURR',hint:'😻',clue:'Happy cat sound'},
+  {word:'MEOW',hint:'🔊',clue:'Cat says...'},
+  {word:'MILK',hint:'🥛',clue:'Cats love to drink this'},
+  {word:'YARN',hint:'🧶',clue:'Cats love to play with this'},
+  {word:'NEKO',hint:'🇯🇵',clue:'Japanese word for cat'},
+  {word:'FISH',hint:'🐟',clue:"A kitty's favorite snack"},
+];
+let g1C=0,g1S=[],g1U=[],g1SH=[];
+function g1TL(){
+  const tl=document.getElementById('g1-timeline');tl.innerHTML='';
+  G1W.forEach((w,i)=>{
+    const s=document.createElement('div');s.className='timeline-step';
+    const d=document.createElement('div');d.className='tl-dot'+(i<g1C?' done':i===g1C?' current':'');d.textContent=i<g1C?'✓':i+1;
+    const l=document.createElement('div');l.className='tl-label';l.textContent='Lv '+(i+1);
+    s.appendChild(d);s.appendChild(l);tl.appendChild(s);
+  });
+}
+function g1Shuf(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=~~(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function g1Load(){
+  if(g1C>=G1W.length)g1C=0;
+  const e=G1W[g1C];g1S=[];g1U=[];g1SH=g1Shuf(e.word.split(''));
+  document.getElementById('g1-hint').textContent=e.hint;
+  document.getElementById('g1-clue').textContent=e.clue;
+  g1TL();g1R();
+}
+function g1R(){
+  const e=G1W[g1C];
+  const tiles=document.getElementById('g1-tiles');tiles.innerHTML='';
+  g1SH.forEach((lt,i)=>{
+    const t=document.createElement('div');t.className='letter-tile'+(g1U.includes(i)?' used':'');
+    t.textContent=lt;t.onclick=()=>g1TC(i,lt);tiles.appendChild(t);
+  });
+  const ans=document.getElementById('g1-answer');ans.innerHTML='';
+  for(let i=0;i<e.word.length;i++){
+    const s=document.createElement('div');s.className='answer-slot'+(g1S[i]?' filled':'');
+    s.textContent=g1S[i]?g1S[i].l:'';s.onclick=()=>g1RL(i);ans.appendChild(s);
+  }
+}
+function g1TC(idx,l){if(g1U.includes(idx)||g1S.length>=G1W[g1C].word.length)return;g1S.push({l,idx});g1U.push(idx);g1R();}
+function g1RL(pos){if(!g1S[pos])return;const r=g1S.splice(pos,1)[0];g1U=g1U.filter(i=>i!==r.idx);g1R();}
+function g1Clear(){g1S=[];g1U=[];g1R();}
+function g1Check(){
+  const e=G1W[g1C];const ans=g1S.map(s=>s.l).join('');
+  if(ans===e.word){
+    const mem=MEM.g1[g1C];
+    g1C++;
+    showMemory(mem,()=>{if(g1C>=G1W.length)g1C=0;g1Load();});
+  } else {
+    const row=document.getElementById('g1-answer');
+    row.style.animation='none';row.offsetHeight;row.style.animation='shake 0.4s ease';
+    g1Clear();
+  }
+}
+
+// ============================================================
+// GAME 2: Emoji Purrfect Pairs
+// ============================================================
+const G2E=['🐱','🌸','⭐','🎀','🍓','🦋','🌈','🍰','💕','🎵','🌺','🍩'];
+let g2Cards=[],g2Fl=[],g2MP=0,g2Mv=0,g2Lk=false,g2ME=new Set();
+function g2Init(){
+  const ch=[...G2E].sort(()=>0.5-Math.random()).slice(0,8);
+  const pr=[...ch,...ch].sort(()=>0.5-Math.random());
+  g2Cards=pr;g2Fl=new Array(16).fill(false);g2MP=0;g2Mv=0;g2Lk=false;g2ME=new Set();
+  document.getElementById('g2-found').textContent='0';
+  document.getElementById('g2-moves').textContent='0';
+  g2Render();
+}
+function g2Render(){
+  const gr=document.getElementById('g2-grid');gr.innerHTML='';
+  g2Cards.forEach((em,i)=>{
+    const c=document.createElement('div');
+    const m=g2ME.has(i);
+    c.className='emoji-card'+(m?' matched':g2Fl[i]?' flipped':' hidden');
+    const inn=document.createElement('div');inn.className='emoji-inner';
+    inn.textContent=g2Fl[i]||m?em:'🐾';c.appendChild(inn);
+    if(!g2Fl[i]&&!m)c.onclick=()=>g2Flip(i);
+    gr.appendChild(c);
+  });
+}
+function g2Flip(idx){
+  if(g2Lk||g2Fl[idx]||g2ME.has(idx))return;
+  const cards=document.getElementById('g2-grid').children;
+  const open=[];for(let i=0;i<g2Cards.length;i++){if(g2Fl[i]&&!g2ME.has(i))open.push(i);}
+  if(open.length===2)return;
+  cards[idx].classList.add('flipped');cards[idx].classList.remove('hidden');
+  cards[idx].querySelector('.emoji-inner').textContent=g2Cards[idx];
+  g2Fl[idx]=true;
+  const now=[];for(let i=0;i<g2Cards.length;i++){if(g2Fl[i]&&!g2ME.has(i))now.push(i);}
+  if(now.length===2){
+    g2Mv++;document.getElementById('g2-moves').textContent=g2Mv;g2Lk=true;
+    setTimeout(()=>{
+      if(g2Cards[now[0]]===g2Cards[now[1]]){
+        g2ME.add(now[0]);g2ME.add(now[1]);
+        cards[now[0]].classList.add('matched');cards[now[1]].classList.add('matched');
+        g2MP++;document.getElementById('g2-found').textContent=g2MP;g2Lk=false;
+        const em=g2Cards[now[0]];
+        const base=MEM.g2[em]||{photo:'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=700&q=80',emoji:em,phrase:'Matched!',desc:'Great memory!'};
+        const mem={...base,ribbon:em+' Matched!',tag:'Emoji Pairs · '+g2MP+' of 8',stars:g2MP>=6?'⭐⭐⭐':g2MP>=3?'⭐⭐':'⭐'};
+        showMemory(mem,()=>{if(g2MP===8)setTimeout(g2Init,400);});
+      } else {
+        g2Fl[now[0]]=false;g2Fl[now[1]]=false;
+        cards[now[0]].classList.remove('flipped');cards[now[1]].classList.remove('flipped');
+        cards[now[0]].classList.add('hidden');cards[now[1]].classList.add('hidden');
+        cards[now[0]].querySelector('.emoji-inner').textContent='🐾';
+        cards[now[1]].querySelector('.emoji-inner').textContent='🐾';
+        g2Lk=false;
+      }
+    },800);
+  }
+}
+
+// ============================================================
+// GAME 3: Meow Colors (Stroop)
+// ============================================================
+const G3C=[
+  {n:'PINK',h:'#FF6B9D'},{n:'BLUE',h:'#5B9BFF'},{n:'GREEN',h:'#3DC87A'},
+  {n:'ORANGE',h:'#FF8C42'},{n:'PURPLE',h:'#AA7BFF'},{n:'RED',h:'#FF5E5E'},
+];
+let g3Sc=0,g3Bs=0,g3Str=0,g3TC=null,g3W=false;
+function g3Next(){
+  if(g3W)return;
+  const we=G3C[~~(Math.random()*G3C.length)];
+  let ce;do{ce=G3C[~~(Math.random()*G3C.length)];}while(ce.n===we.n&&Math.random()>0.3);
+  g3TC=ce;
+  document.getElementById('g3-word').textContent=we.n;
+  document.getElementById('g3-word').style.color=ce.h;
+  const opts=[ce];const ot=G3C.filter(c=>c.n!==ce.n);
+  while(opts.length<4){const p=ot[~~(Math.random()*ot.length)];if(!opts.find(o=>o.n===p.n))opts.push(p);}
+  opts.sort(()=>0.5-Math.random());
+  const btns=document.getElementById('g3-buttons');btns.innerHTML='';
+  opts.forEach(op=>{
+    const b=document.createElement('button');b.className='color-btn';
+    b.textContent=op.n;b.style.background=op.h+'22';b.style.borderColor=op.h;b.style.color=op.h;
+    b.onclick=()=>g3Ans(op);btns.appendChild(b);
+  });
+  g3US();
+}
+function g3Ans(op){
+  if(g3W)return;g3W=true;
+  const bs=document.getElementById('g3-buttons').querySelectorAll('.color-btn');
+  bs.forEach(b=>{b.disabled=true;if(b.textContent===g3TC.n)b.style.background=g3TC.h+'44';});
+  if(op.n===g3TC.n){
+    g3Sc++;g3Str++;
+    if(g3Sc>g3Bs){g3Bs=g3Sc;document.getElementById('g3-best').textContent=g3Bs;}
+    document.getElementById('g3-score').textContent=g3Sc;
+    g3US();
+    const mi=~~(Math.random()*MEM.g3.length);
+    const mem={...MEM.g3[mi],ribbon:'🎨 Color Ace!',tag:'Meow Colors · Score '+g3Sc,stars:g3Str>=5?'⭐⭐⭐':g3Str>=3?'⭐⭐':'⭐'};
+    showMemory(mem,()=>{g3W=false;g3Next();});
+  } else {
+    g3Str=0;g3Sc=0;document.getElementById('g3-score').textContent=g3Sc;
+    bs.forEach(b=>{if(b.textContent===op.n)b.style.background='#FFCCCC';});
+    g3US();setTimeout(()=>{g3W=false;g3Next();},900);
+  }
+}
+function g3US(){
+  const bar=document.getElementById('g3-streak');bar.innerHTML='';
+  for(let i=0;i<5;i++){const s=document.createElement('span');s.className='streak-star'+(i<g3Str?' lit':'');s.textContent='⭐';bar.appendChild(s);}
+}
+
+// ============================================================
+// GAME 4: Cat-chy Trivia
+// ============================================================
+const G4Q=[
+  {e:'💕',q:'What is the secret to succeeding in a long distance relationship?',o:['Trust & Communication','Frequent visits only','Ignoring the distance','Just hoping it works'],a:0},
+  {e:'📞',q:'How often should you communicate when apart?',o:['Once a week','As much as feels natural','Never, save surprises','Only on weekends'],a:1},
+  {e:'✈️',q:'What makes a long distance relationship strong?',o:['Having an end date','Shared goals & commitment','Money to visit','Luck only'],a:1},
+  {e:'💌',q:'What is the most important in a LDR?',o:['Physical presence','Trust & honesty','Same timezone','Living nearby'],a:1},
+  {e:'💞',q:'How do successful couples handle the distance?',o:['Plan visits','Stay emotionally connected','Make future plans together','All of the above'],a:3},
+  {e:'🌍',q:'What helps you feel closer despite distance?',o:['Shared memories','Video calls & messages','Matching gifts & surprises','All of these'],a:3},
+  {e:'💑',q:'The key to our relationship is...',o:['Never fighting','Patience & understanding','Always being right','Perfect timing'],a:1},
+  {e:'🎀',q:'What is worth fighting for in love?',o:['The easy way','Something real & genuine','Someone perfect','Giving up quickly'],a:1},
+];
+let g4C=0,g4A=false;
+function g4Load(){
+  if(g4C>=G4Q.length){
+    // All questions completed! Trigger music
+    g4C=0;
+    showTriviaCongrats();
+    return;
+  }
+  g4A=false;
+  const q=G4Q[g4C];
+  document.getElementById('g4-emoji').textContent=q.e;
+  document.getElementById('g4-question').textContent=q.q;
+  document.getElementById('g4-progress').textContent=`Question ${g4C+1} of ${G4Q.length}`;
+  const opts=document.getElementById('g4-options');opts.innerHTML='';
+  q.o.forEach((op,i)=>{const b=document.createElement('button');b.className='quiz-opt';b.textContent=op;b.onclick=()=>g4Ans(i);opts.appendChild(b);});
+}
+function showTriviaCongrats(){
+  const quiz=document.getElementById('g4-question').parentElement.parentElement.parentElement;
+  quiz.innerHTML=`
+    <div style="text-align:center;padding:3rem 2rem;animation:slideInMemory 0.8s ease-out;">
+      <div style="font-size:4rem;margin-bottom:1rem;animation:float 3s ease-in-out infinite;">🎉</div>
+      <h2 style="font-family:'Fredoka One',cursive;font-size:2rem;color:#FF8FAB;margin-bottom:1rem;text-shadow:2px 2px 4px rgba(0,0,0,0.1);">You Did It! 💕</h2>
+      <p style="font-size:1.1rem;color:#4A3728;margin-bottom:2rem;font-weight:600;line-height:1.8;">You answered all the questions right!<br/>Now let's celebrate with some music... 🎵</p>
+      <button onclick="location.reload()" style="background:linear-gradient(135deg,#FF8FAB,#C084FC);color:white;border:none;padding:1rem 2rem;border-radius:20px;font-family:'Fredoka One',cursive;font-size:1.1rem;cursor:pointer;font-weight:800;box-shadow:0 8px 20px rgba(232,67,110,0.3);transition:all 0.3s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">Play Again 🎮</button>
+    </div>
+  `;
+  // Trigger music in parent window
+  if(window.parent && window.parent.triggerMusic){
+    window.parent.triggerMusic();
+  }
+}
+function g4Ans(idx){
+  if(g4A)return;g4A=true;
+  const q=G4Q[g4C];const bs=document.querySelectorAll('.quiz-opt');bs.forEach(b=>b.disabled=true);
+  bs[q.a].classList.add('correct');
+  if(idx===q.a){
+    if(idx!==q.a)bs[idx].classList.add('correct');
+    const mem={...MEM.g4[g4C],ribbon:'🐾 Correct!',tag:'Cat Trivia · Q'+(g4C+1)+' of '+G4Q.length,stars:'⭐⭐⭐'};
+    g4C++;showMemory(mem,g4Load);
+  } else {
+    bs[idx].classList.add('wrong');setTimeout(()=>{g4C++;g4Load();},1200);
+  }
+}
+
+// ============================================================
+// PERSONALIZATION & STORAGE
+// ============================================================
+function loadCustomizations(){
+  try{
+    const custom=JSON.parse(localStorage.getItem('ldrGameCustom'))||{};
+    // Load custom descriptions for each question
+    MEM.g4.forEach((mem,i)=>{
+      if(custom[`q${i}_desc`]){mem.customDesc=custom[`q${i}_desc`];}
+    });
+  }catch(e){}
+}
+function saveCustomization(index,desc){
+  try{
+    let custom=JSON.parse(localStorage.getItem('ldrGameCustom'))||{};
+    custom[`q${index}_desc`]=desc;
+    localStorage.setItem('ldrGameCustom',JSON.stringify(custom));
+  }catch(e){}
+}
+function unlockMessage(){
+  const unlockedMsg='💕 **SPECIAL MESSAGE UNLOCKED** 💕\n\nCongratulations on completing the trivia! 🌟\n\nYou two are amazing together. The distance doesn\'t matter when you\'ve got something real.\n\nI\'m so grateful for you. Every day with you means everything to me.\n\n— With all my love 💕';
+  alert(unlockedMsg);
+}
+loadCustomizations();
+
+// Shake animation
+const sty=document.createElement('style');sty.textContent=`@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}`;
+document.head.appendChild(sty);
+
+g1Load();g2Init();g3Next();g4Load();
+</script>
+</body>
+</html>
